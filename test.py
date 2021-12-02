@@ -2,11 +2,10 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import utils
 import os
-import argparse
 
 from model.Generator import GlobalGenerator
 from dataset import TestImageDataSet
-from utils import get_norm_layer as get_norm_layer
+from utils.utils import get_norm_layer as get_norm_layer
 from options.testOption import get_args
 
 if __name__ == '__main__':

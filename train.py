@@ -1,5 +1,3 @@
-import argparse
-import itertools
 import torch
 from torch.utils.data import DataLoader
 from torchvision import utils
@@ -9,8 +7,8 @@ from dataset import ImageDataSet
 from dataset import TestImageDataSet
 from model.Generator import GlobalGenerator
 from model.Discriminator import MultiscaleDiscriminator
-from utils import get_norm_layer as get_norm_layer
-from utils import weights_init as weights_init
+from utils.utils import get_norm_layer as get_norm_layer
+from utils.utils import weights_init as weights_init
 from Loss import GANLoss
 from Loss import VGGLoss
 from options.trainOption import get_args as get_args
@@ -39,7 +37,7 @@ if __name__ == '__main__':
 
     # 定义使用gpu及其cuda
     os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3"
-    device = 'cuda:0'
+    device = 'cuda:3'
 
     # 定义dataloader
     dataset = ImageDataSet(data_root=args.data_root,
@@ -64,7 +62,7 @@ if __name__ == '__main__':
                         norm_layer=get_norm_layer(norm_type=args.norm)).to(device)
     G.apply(weights_init)
 
-    D = MultiscaleDiscriminator(input_nc=args.input_nc,
+    D = MultiscaleDiscriminator(input_nc=args.input_nc + args.input_nc,
                                  ndf=args.ndf,
                                  n_layers=args.n_layers_D,
                                  norm_layer=get_norm_layer(norm_type=args.norm),
@@ -143,8 +141,8 @@ if __name__ == '__main__':
             requires_grad(G, False)
             requires_grad(D, True)
 
-            real_pred = D(imgB)
-            fake_pred = D(imgA2B)
+            real_pred = D(torch.cat([imgA, imgB],dim=1))
+            fake_pred = D(torch.cat([imgA, imgA2B], dim=1))
 
             D_Adv = 1/2 * criterionGAN(fake_pred, False) +\
                      1/2 * criterionGAN(real_pred, True)
@@ -160,8 +158,8 @@ if __name__ == '__main__':
             requires_grad(G, True)
             requires_grad(D, False)
 
-            real_pred = D(imgB)
-            fake_pred = D(imgA2B)
+            real_pred = D(torch.cat([imgA, imgB], dim=1))
+            fake_pred = D(torch.cat([imgA, imgA2B], dim=1))
 
             G_loss_adv = criterionGAN(fake_pred, True)
 
